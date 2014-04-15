@@ -1,7 +1,7 @@
 ### AWS credentials: ####
-aws_access_key_id='AKIAI7AWJT7RBAPJX6WQ'
-aws_secret_access_key='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'
-keyPairFile='/Users/yoavfreund/.ssh/YoavsKeypair.pem' # name of local file storing keypair
-key_name="YoavsKeypair"         # name of keypair on AWS
-security_groups=['YoavsWork']
+aws_access_key_id='AKIAIMVEMIEP25S3FTIQ'
+aws_secret_access_key='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'
+keyPairFile="/Users/jinlong/Documents/cse291.pem" # name of file keeping local key
+key_name="cse291" # name of keypair (not name of file where key is stored)
+security_groups=['default']
 ### End of AWS credentials ####
