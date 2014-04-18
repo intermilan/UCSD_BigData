@@ -1,4 +1,4 @@
-#/usr/bin/env python
+#!/usr/bin/env python
 """### A Script for Launching and managing an iPython notebook server on AWS ###
  # Written by Yoav Freund, March 2014
 
