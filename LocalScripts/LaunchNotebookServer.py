@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#/usr/bin/env python
 """### A Script for Launching and managing an iPython notebook server on AWS ###
  # Written by Yoav Freund, March 2014
 
@@ -39,7 +39,7 @@ Here are the steps you need to follow to achieve this
 
 from AWSCredentials import *
 
-ami='ami-278a974e'              # Image configured for big data class
+ami='ami-c15c44a8'              # Image configured for big data class
 # AMI name: DataScienceEigenVector. These two lines updates 4/8/2014
 
 # ### Definitions of procedures ###
