@@ -1,18 +1,48 @@
 ## Notebooks created For Big Data Course ##
+
+#### __[weather.MR]__ UCSD_BigData/notebooks/weather.mapreduce/
+A directory with a notebook for using mrjob on the weather data.
+Intended to be used with the complete dataset of 7.9 GB.
+
+Contains also useful python and pkl files. Check the README
+#### __[mrjob]__ UCSD_BigData/notebooks/mrjob/ ####
+Notebooks using mrjob to run map-reduce jobs
+
+####  __[sorting]__  UCSD_BigData/notebooks/sorting/ ####
+A notebook about sorting and it's application in map-reduce and in random sampling
+
+####  __[P-values]__  UCSD_BigData/notebooks/P-values/ ####
+A variant of the weather notebook that includes a correction to a mistake and the computation of different p-values for the correlation between variables.
+
+####  __[IOPerformance]__ UCSD_BigData/notebooks/IOPerformance/  ####
+Analysis of the IO-speed achieved by a particular type of instance,
+both in the single-thread and the multi-thread/multi-core
+case. Includes also an introduction to the IPython.parallel package.
+
+####  __[boto]__ UCSD_BigData/notebooks/boto/ ####
+Notebooks regarding boto: the python API to AWS
+
 ####  __[docs]__ UCSD_BigData/notebooks/docs/  ####
-Markdown documents 
+Markdown documents regarding the course
+
 ####  __[PCA]__  UCSD_BigData/notebooks/sklearn_Yoav/  ####
 A basic notebook about PCA analysis  **[HW for 4/15]**
+
 ####  __[eigenfaces]__  UCSD_BigData/notebooks/eigenfaces/  ####
 A notebook demonstrating the use of PCA for analyzing images of faces.   **[HW for 4/15]**
+
 ####  __[weather]__  UCSD_BigData/notebooks/weather/  ####
 A notebook demonstrating the use of PCA to the analysis of weather patterns.  **[HW for 4/15]**
+
 ####  __[regression]__  UCSD_BigData/notebooks/regression/ ####
 Notebooks about linear regression
+
 ####  __[online]__ UCSD_BigData/notebooks/online/  ####
 A notebook discussing online learning and stochastic gradient descent
-#### __[docs]__  UCSD_BigData/notebooks/docs/
+
+#### __[docs]__  UCSD_BigData/notebooks/docs/ ####
 Documentation Notebooks: the review process and how to use github to do it.
+
 ----
 ## Introduction to ipython Notebooks ##
 ####  __[ipython]__  ipython/examples/notebooks/

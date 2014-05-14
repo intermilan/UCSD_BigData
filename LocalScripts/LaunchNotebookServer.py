@@ -8,8 +8,7 @@
  You can use either "sudo pip install boto" or "sudo easy_install boto"
 
 ### Security credentials ###
- In order to launch a notebook you need to first establish credentials on AWS. Set these credentials
-by editing the values in the section titled "AWS Credentials" below.
+ In order to launch a notebook you need to first establish credentials on AWS. Set these credentials by editing the values in the file ../../Vault/AWSCredentials.py
 
 Here are the steps you need to follow to achieve this
 
@@ -37,18 +36,34 @@ Here are the steps you need to follow to achieve this
 
 """
 
-from AWSCredentials import *
-
-ami='ami-c15c44a8'             # Image configured for big data class
-# AMI name: IPython2.0 . These two lines last updated 4/17/2014
-
 # ### Definitions of procedures ###
 import boto.ec2
-import time
+import time, pickle
 import subprocess
-import sys,re,webbrowser,select
+import sys,os,re,webbrowser,select
 from string import rstrip
 import argparse
+
+
+ami='ami-18d33e70'             # Image configured for big data class
+# AMI name: ERM_Utils These two lines last updated 5/11/2014
+
+# Read Credentials 
+try:
+    vault=os.environ['EC2_VAULT']
+    file=open(vault+'/Creds.pkl')
+    ALL_Creds=pickle.load(file)
+    Creds=ALL_Creds['launcher']
+    print Creds
+    aws_access_key_id=Creds['key_id']
+    aws_secret_access_key=Creds['secret_key']
+    user_name=Creds['ID']
+    keyPairFile=Creds['ssh_key_pair_file'] # name of local file storing keypair
+    key_name=Creds['ssh_key_name']         # name of keypair on AWS
+    security_groups=Creds['security_groups'] # security groups for controlling access
+except Exception, e:
+    print e
+    sys.exit('could not read credentials')
 
 # open connection
 def open_connection(aws_access_key_id,
@@ -72,35 +87,62 @@ def report_all_instances():
     for reservation in reservations:
         print '\nReservation: ',reservation
         for instance in reservation.instances:
-            print 'instance no.=',count,'instance name=',instance,'DNS name = ',instance.public_dns_name
-            print 'Instance state=',instance.state
-            if instance_alive==-1:
-                if instance.state =='running' and pending:
-                    instance_alive=count # point to first running instance
-                    pending=False
-                elif instance.state =='pending' and pending:
-                    instance_alive=count # point to first pending instance
-                print 'ssh -i %s %s@%s' % (keyPairFile,login_id,instance.public_dns_name)
-            instances.append(instance)
-            count+=1
+            if len(instance.tags)==2:
+                print 'Instance tags=',instance.tags
+            else:
+                print 'instance no.=',count,'instance name=',instance,'DNS name = ',instance.public_dns_name
+                print 'Instance state=',instance.state
+                print 'Instance tags=',len(instance.tags)
+                print 'This looks like a private instance launched by this script!'
+                #This is the private instance, probably launched by this script.
+                if instance_alive==-1 and instance.state != 'terminated':
+                    if instance.state =='running' and pending:
+                        instance_alive=count # point to first running instance
+                        pending=False
+                    elif instance.state =='pending' and pending:
+                        instance_alive=count # point to first pending instance
+                    print 'ssh -i %s %s@%s' % (keyPairFile,login_id,instance.public_dns_name)
+                    instances.append(instance)
+                    count+=1
 
     return (instances,instance_alive)
 
+def emptyCallBack(line): return False
+
 def kill_all_notebooks():
     command=['scripts/CloseAllNotebooks.py']
-    def emptyCallBack(line): return False
     Send_Command(command,emptyCallBack)
+
+def set_credentials():
+    """ set ID and secret key as environment variables on the remote machine"""
+    
+
+def copy_credentials(LocalDir):
+    from glob import glob
+    print 'Entered copy_credentials:',LocalDir
+    mkdir=['mkdir','Vault']
+    Send_Command(mkdir,emptyCallBack,dont_wait=True)
+    list=glob(args['Copy_Credentials'])
+    scp=['scp','-i',keyPairFile]+list+[('%s@%s:Vault/' % (login_id,instance.public_dns_name))]
+    print ' '.join(scp)
+    subprocess.call(scp)
 
 def set_password(password):
     if len(password)<6:
         sys.exit('Password must be at least 6 characters long')
     command=["scripts/SetNotebookPassword.py",password]
-    def emptyCallBack(line): return False
     Send_Command(command,emptyCallBack)
 
-def Send_Command(command,callback):
+def create_image(image_name):
+    #delete the Vault directory, where all of the secret keys and passwords reside.
+    delete_Vault=['rm','-r','~/Vault']
+    Send_Command(delete_Vault,emptyCallBack)
+    instance.create_image(args['create_image'])
+
+def Send_Command(command,callback,dont_wait=False):
     init=time.time()
     
+    print 'SendCommand:',' '.join(ssh+command)
     ssh_process = subprocess.Popen(ssh+command,
                                    shell=False,
                                    stdin=subprocess.PIPE,
@@ -122,7 +164,7 @@ def Send_Command(command,callback):
                 matchEnd=re.match('=== END ===',line)
                 if matchEnd:
                     endReached=True
-
+        if dont_wait: endReached=True
         time.sleep(0.01)
 
 def Launch_notebook(name=''):
@@ -168,6 +210,10 @@ if __name__ == "__main__":
 #----------------------------------------------------------------------------------------
     parser.add_argument('-k','--kill_all',dest='kill',action='store_true',default=False,
                         help='close all running notebook servers')
+    parser.add_argument('-d','--disk_size', default=0, type=int,
+                        help='Amount of additional disk space in GB (default 0)')
+    parser.add_argument('-A','--Copy_Credentials',
+                        help='Copy the credentials files to the Vault directory on the AWS instance. Parameter is a the full path of the files you want to transfer to the vault. Wildcards are allowed but have to be preceded by a "\")')
 
     args = vars(parser.parse_args())
 
@@ -188,11 +234,21 @@ if __name__ == "__main__":
 
     if instance_alive==-1: # if there is no instance that is pending or running, create one
         instance_type=args['instance_type']
-        print 'launching an ec2 instance, instance type=',instance_type,', ami=',ami
+        disk_size=args['disk_size']
+        print 'launching an ec2 instance, instance type=',instance_type,', ami=',ami,', disk size=',disk_size
+
+        bdm = boto.ec2.blockdevicemapping.BlockDeviceMapping()
+        if disk_size>0:
+            dev_sda1 = boto.ec2.blockdevicemapping.EBSBlockDeviceType()
+            dev_sda1.size = disk_size # size in Gigabytes
+            bdm['/dev/sda1'] = dev_sda1 
+
         reservation=conn.run_instances(ami,
                                        key_name=key_name,
                                        instance_type=instance_type,
-                                       security_groups=security_groups)
+                                       security_groups=security_groups,
+                                       block_device_map = bdm)
+
         print 'Launched Instance',reservation
         
         (instances,instance_alive) = report_all_instances()
@@ -219,7 +275,9 @@ if __name__ == "__main__":
 
     if(args['create_image'] != None):
         print "creating a new AMI called",args['create_image']
-        instance.create_image(args['create_image'])
+        create_image(args['create_image'])
 
-
+    if(args['Copy_Credentials']!= None):
+       copy_credentials(args['Copy_Credentials'])
+       
 
