@@ -56,17 +56,17 @@ class AWS_keypair_management:
                         Key_Table[User_Name]['Passwords'].append(password)
         chdir(old_dir)
         return Key_Table,bad_key_files
-
-        def insert_creds_into_conf(self,keypair):
-            " Insert credentials into mrjob configuration file "
-            try:
-                template=open('/home/ubuntu/UCSD_BigData/utils/mrjob.conf.template').read()
-                filled= template % (keypair['Access_Key_Id'],keypair['Secret_Access_Key'])
-                open('/home/ubuntu/.mrjob.conf','wb').write(filled)
-                return True
-            except Exception, e:
-                print e
-                return False
+	
+    def insert_creds_into_conf(self,keypair):
+        " Insert credentials into mrjob configuration file "
+        try:
+            template=open('/home/ubuntu/UCSD_BigData/utils/mrjob.conf.template').read()
+            filled= template % (keypair['Access_Key_Id'],keypair['Secret_Access_Key'])
+            open('/home/ubuntu/.mrjob.conf','wb').write(filled)
+            return True
+        except Exception, e:
+            print e
+            return False
 
 if __name__=='__main__':
     import os, sys, pickle
