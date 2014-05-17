@@ -2,22 +2,30 @@
 """
 count the number of measurements of each type
 """
+import sys
+sys.path.append('/usr/lib/python2.6/dist-packages')
 from mrjob.job import MRJob
 import re
 from sys import stderr
 
-#logfile=open('log','w')
-logfile=stderr
-
 class MRWeather(MRJob):
 
     def mapper(self, _, line):
-        self.increment_counter('MrJob Counters','mapper',1)
-        elements=line.split(',')
-        if elements[0]=='station':
-            yield('header',1)
-        else:
-            yield(elements[1],1)
+        try:
+            self.increment_counter('MrJob Counters','mapper-all',1)
+            elements=line.split(',')
+            if elements[0]=='station':
+                out=('header',1)
+            else:
+                out=(elements[1],1)
+        except Exception, e:
+            stderr.write('Error in line:\n'+line)
+            stderr.write(e)
+            self.increment_counter('MrJob Counters','mapper-error',1)
+            out=('error',1)
+
+        finally:
+            yield out
             
     def combiner(self, word, counts):
         self.increment_counter('MrJob Counters','combiner',1)
