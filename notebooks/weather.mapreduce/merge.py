@@ -48,17 +48,17 @@ class MRWeather(MRJob):
             self.increment_counter('MrJob Counters','mapper-error',1)
             out=('error', 1)
         finally:
-            yield (int(key), data_list)
+            #yield (int(key), data_list)
             yield (int(key)/2+1024, data_list)
             yield (int(key)/4+1024+512, data_list)
             yield (int(key)/8+1024+512+256, data_list)
             yield (int(key)/16+1024+512+256+128, data_list)
             yield (int(key)/32+1024+512+256+128+64, data_list)
             yield (int(key)/64+1024+512+256+128+64+32, data_list)
-            yield (int(key)/128+1024+512+256+128+64+32+16, data_list)
-            yield (int(key)/256+1024+512+256+128+64+32+16+8, data_list)
-            yield (int(key)/512+1024+512+256+128+64+32+16+8+4, data_list)
-            yield (int(key)/1024+1024+512+256+128+64+32+16+8+4+2, data_list)
+            #yield (int(key)/128+1024+512+256+128+64+32+16, data_list)
+            #yield (int(key)/256+1024+512+256+128+64+32+16+8, data_list)
+            #yield (int(key)/512+1024+512+256+128+64+32+16+8+4, data_list)
+            #yield (int(key)/1024+1024+512+256+128+64+32+16+8+4+2, data_list)
     
     def reducer(self, station, counts):
         self.increment_counter('MrJob Counters','reducer',1)
